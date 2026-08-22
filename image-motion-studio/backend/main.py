@@ -70,10 +70,10 @@ class GenerateRequest(BaseModel):
     resolution: str = "1080p"
     aspect_ratio: str = "original"
     # Camera Motion
-    push_in: float = 3.0
-    horizontal_drift: float = 2.5
-    vertical_drift: float = 4.5
-    handheld: float = 4.0
+    push_in: float = 1.0
+    horizontal_drift: float = 3.0
+    vertical_drift: float = 2.0
+    handheld: float = 6.0
     # Parallax / Depth
     depth_strength: float = 9.0
     foreground_separation: float = 9.0
@@ -85,7 +85,7 @@ class GenerateRequest(BaseModel):
     # Atmosphere
     dust_particles: float = 2.5
     light_shift: float = 3.0
-    film_grain: float = 4.0
+    film_grain: float = 5.0
 
 
 # --- Endpoints ---

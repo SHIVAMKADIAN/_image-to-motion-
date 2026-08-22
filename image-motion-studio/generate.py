@@ -33,10 +33,10 @@ DEFAULTS = dict(
     edge_fill           = "inpaint",
 
     # Camera Motion
-    push_in             = 3.0,
-    h_drift             = 2.5,
-    v_drift             = 4.5,
-    handheld            = 4.0,
+    push_in             = 1.0,
+    h_drift             = 3.0,
+    v_drift             = 2.0,
+    handheld            = 6.0,
 
     # Parallax / Depth
     depth_strength      = 9.0,
@@ -50,7 +50,7 @@ DEFAULTS = dict(
     # Atmosphere
     dust_particles      = 2.5,
     light_shift         = 3.0,
-    film_grain          = 4.0,
+    film_grain          = 5.0,
 )
 
 
