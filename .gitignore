@@ -1,0 +1,39 @@
+# Python virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+
+# PyTorch / HuggingFace model cache
+*.dylib
+*.so
+*.bin
+
+# Node / frontend
+node_modules/
+dist/
+.next/
+
+# Outputs & uploads (large media files)
+image-motion-studio/outputs/
+image-motion-studio/uploads/
+image-motion-studio/temp/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Env files
+.env
+.env.local
