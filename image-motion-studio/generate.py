@@ -26,7 +26,7 @@ from renderer import run_pipeline
 # DEFAULT SETTINGS (from the notebook)
 # ─────────────────────────────────────────────
 DEFAULTS = dict(
-    duration            = 1.25,
+    duration            = 2.0,
     fps                 = 30,
     resolution          = "1080p",
     aspect_ratio        = "original",
@@ -34,7 +34,7 @@ DEFAULTS = dict(
 
     # Camera Motion
     push_in             = 3.0,
-    h_drift             = 0.8,
+    h_drift             = 2.0,
     v_drift             = 4.5,
     handheld            = 4.0,
 
@@ -112,8 +112,8 @@ Examples:
     depth_map = estimate_depth(str(image_path), depth_path)
     print(f"     ✅ Depth map: {depth_map.shape[1]}x{depth_map.shape[0]}")
 
-    # ── Step 2: Render 1.25 sec clip ─────────────────────────────────────────
-    print("\n2/2  Rendering 1.25 sec video clip...")
+    # ── Step 2: Render clip ─────────────────────────────────────────
+    print(f"\n2/2  Rendering {DEFAULTS['duration']} sec video clip...")
     cb = progress_bar("     Render")
 
     output_file = run_pipeline(
@@ -125,7 +125,7 @@ Examples:
         progress_callback = cb,
     )
 
-    final_path = output_dir / f"{stem}_1.25s.mp4"
+    final_path = output_dir / f"{stem}_{DEFAULTS['duration']}s.mp4"
     if Path(output_file).exists():
         shutil.move(output_file, final_path)
 

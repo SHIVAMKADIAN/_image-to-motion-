@@ -65,13 +65,13 @@ class DepthRequest(BaseModel):
 class GenerateRequest(BaseModel):
     image_id: str
     # Timing & Quality
-    duration: float = 1.25
+    duration: float = 2.0
     fps: int = 30
     resolution: str = "1080p"
     aspect_ratio: str = "original"
     # Camera Motion
     push_in: float = 3.0
-    horizontal_drift: float = 0.8
+    horizontal_drift: float = 2.0
     vertical_drift: float = 4.5
     handheld: float = 4.0
     # Parallax / Depth
