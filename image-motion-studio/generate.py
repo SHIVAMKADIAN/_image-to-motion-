@@ -34,7 +34,7 @@ DEFAULTS = dict(
 
     # Camera Motion
     push_in             = 3.0,
-    h_drift             = 2.0,
+    h_drift             = 2.5,
     v_drift             = 4.5,
     handheld            = 4.0,
 
@@ -50,7 +50,7 @@ DEFAULTS = dict(
     # Atmosphere
     dust_particles      = 2.5,
     light_shift         = 3.0,
-    film_grain          = 3.0,
+    film_grain          = 4.0,
 )
 
 

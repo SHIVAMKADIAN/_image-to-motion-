@@ -71,7 +71,7 @@ class GenerateRequest(BaseModel):
     aspect_ratio: str = "original"
     # Camera Motion
     push_in: float = 3.0
-    horizontal_drift: float = 2.0
+    horizontal_drift: float = 2.5
     vertical_drift: float = 4.5
     handheld: float = 4.0
     # Parallax / Depth
@@ -85,7 +85,7 @@ class GenerateRequest(BaseModel):
     # Atmosphere
     dust_particles: float = 2.5
     light_shift: float = 3.0
-    film_grain: float = 3.0
+    film_grain: float = 4.0
 
 
 # --- Endpoints ---
