@@ -70,10 +70,10 @@ class GenerateRequest(BaseModel):
     resolution: str = "1080p"
     aspect_ratio: str = "original"
     # Camera Motion
-    push_in: float = 1.0
+    push_in: float = 4.0
     horizontal_drift: float = 3.0
     vertical_drift: float = 2.0
-    handheld: float = 6.0
+    handheld: float = 8.0
     # Parallax / Depth
     depth_strength: float = 9.0
     foreground_separation: float = 9.0
@@ -83,7 +83,7 @@ class GenerateRequest(BaseModel):
     watcher_sway: float = 9.0
     blink: bool = False
     # Atmosphere
-    dust_particles: float = 2.5
+    dust_particles: float = 1.5
     light_shift: float = 3.0
     film_grain: float = 5.0
 
