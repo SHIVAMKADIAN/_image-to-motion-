@@ -27,7 +27,7 @@ def generate_camera_trajectory(
     v_drift: float,
     handheld: float,
     fps: int,
-    camera_shake: float = 0.1,
+    camera_shake: float = 0.0,
 ) -> list[dict]:
     """
     Generate per-frame camera parameters with easing, organic handheld drift,
@@ -405,7 +405,7 @@ def apply_post_parallax_camera_motion(
     time_sec: float,
     duration: float,
     zoom_out: float = 1.0,
-    camera_shake: float = 0.6,
+    camera_shake: float = 0.0,
     handheld: float = 3.0,
 ) -> np.ndarray:
     """
@@ -479,7 +479,7 @@ def render_frames(
     specular_shimmer: float = 2.0,
     heartbeat_pulse: float = 2.5,
     motion_blur: float = 1.0,
-    camera_shake: float = 2.0,
+    camera_shake: float = 0.0,
     progress_callback=None,
 ) -> list[np.ndarray]:
     """
@@ -713,7 +713,7 @@ def run_pipeline(
     specular_shimmer: float = 2.0,
     heartbeat_pulse: float = 2.5,
     motion_blur: float = 1.0,
-    camera_shake: float = 2.0,
+    camera_shake: float = 0.0,
     progress_callback=None,
 ) -> str:
     """

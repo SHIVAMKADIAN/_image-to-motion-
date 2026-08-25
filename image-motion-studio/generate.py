@@ -61,7 +61,7 @@ DEFAULTS = dict(
     rack_focus          = 2.0,
     specular_shimmer    = 2.0,
     motion_blur         = 1.0,
-    camera_shake        = 2.0,
+    camera_shake        = 0.0,
 )
 
 

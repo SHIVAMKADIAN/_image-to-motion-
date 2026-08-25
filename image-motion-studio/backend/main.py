@@ -75,7 +75,7 @@ class GenerateRequest(BaseModel):
     horizontal_drift: float = 0.0
     vertical_drift: float = 0.0
     handheld: float = 6.5
-    camera_shake: float = 2.0
+    camera_shake: float = 0.0
     zoom_out: float = 5.0
     zoom_in: float = 5.0
     # Parallax / Depth

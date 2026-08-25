@@ -200,10 +200,9 @@
       }
     }
 
-    const t = anim.elapsed;
-    const shakeSpeed = 0.15 + (params.camera_shake || 0.1) * 2.05;
+    const shakeInt = params.camera_shake !== undefined ? params.camera_shake : 0.0;
+    const shakeSpeed = 0.15 + shakeInt * 2.05;
     const tShake = t * shakeSpeed;
-    const shakeInt = params.camera_shake || 0.1;
 
     // Multi-harmonic kinetic motion equations
     const nx = Math.sin(tShake * 1.0) * 0.6 + Math.sin(tShake * 1.7 + 1.3) * 0.4;

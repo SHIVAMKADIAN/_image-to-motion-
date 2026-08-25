@@ -1,4 +1,6 @@
 {
+  "venvPath": "image-motion-studio/backend",
+  "venv": ".venv",
   "extraPaths": [
     "image-motion-studio",
     "image-motion-studio/backend"

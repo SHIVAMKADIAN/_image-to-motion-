@@ -17,7 +17,7 @@ const PRESETS = {
       vDrift: 0.0,
       zoomOut: 5.0,
       handheld: 6.5,
-      cameraShake: 2.0,
+      cameraShake: 0.0,
       depthStrength: 15.0,
       foregroundSeparation: 10.0,
       breathing: 10.0,
