@@ -64,9 +64,6 @@
   const progressPct = document.getElementById("progressPct");
   const progressFill = document.getElementById("progressFill");
 
-  const presetSelect = document.getElementById("presetSelect");
-  const presetDesc = document.getElementById("presetDesc");
-
   /* ────────── State ────────── */
   let currentImageId = null;
   let hasDepth = false;
@@ -202,7 +199,7 @@
 
     const shakeInt = params.camera_shake !== undefined ? params.camera_shake : 0.0;
     const shakeSpeed = 0.15 + shakeInt * 2.05;
-    const tShake = t * shakeSpeed;
+    const tShake = anim.elapsed * shakeSpeed;
 
     // Multi-harmonic kinetic motion equations
     const nx = Math.sin(tShake * 1.0) * 0.6 + Math.sin(tShake * 1.7 + 1.3) * 0.4;

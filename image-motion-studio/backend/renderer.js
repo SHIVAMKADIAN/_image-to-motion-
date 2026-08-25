@@ -528,6 +528,23 @@ function boxBlurPixels(pixels, w, h, r) {
   return boxBlur(pixels, w, h, r);
 }
 
+function applyMotionBlur(currentFrame, prevFrame, w, h, intensity) {
+  if (intensity <= 0 || !prevFrame) return currentFrame;
+  const blendFactor = clip((intensity / 10.0) * 0.35, 0, 0.5);
+  const out = new Uint8ClampedArray(currentFrame.length);
+  const n = w * h;
+  for (let i = 0; i < n; i++) {
+    for (let c = 0; c < 3; c++) {
+      out[i * 4 + c] = clip(
+        currentFrame[i * 4 + c] * (1 - blendFactor) + prevFrame[i * 4 + c] * blendFactor,
+        0, 255
+      );
+    }
+    out[i * 4 + 3] = 255;
+  }
+  return out;
+}
+
 function applyPostParallaxCameraMotion({ pixels, w, h, timeSec, duration, zoomOut, cameraShake, handheld }) {
   const t = clip(timeSec / Math.max(duration, 0.01), 0, 1);
   const easedT = cubicEaseOut(t);
@@ -546,7 +563,7 @@ function applyPostParallaxCameraMotion({ pixels, w, h, timeSec, duration, zoomOu
 
   const txPx = (nx * 3.0 * shakeIntensity + hhX) * (w / 100.0);
   const tyPx = (ny * 3.0 * shakeIntensity + hhY) * (h / 100.0);
-  const rotDeg = (nr * 0.35 * shakeIntensity) * (180.0 / Math.PI);
+  const rotDeg = nr * 0.35 * shakeIntensity;
   const totalScale = Math.max(zoomScale, 1.04);
 
   return affineTransform(pixels, w, h, totalScale, txPx, tyPx, rotDeg);
@@ -556,7 +573,7 @@ function applyPostParallaxCameraMotion({ pixels, w, h, timeSec, duration, zoomOu
 // Main Render Pipeline
 // ─────────────────────────────────────────────
 
-async function renderFrames({
+async function renderFramesToDisk({
   pixels, depthMap, origW, origH,
   duration, fps,
   pushIn, hDrift, vDrift, handheld,
@@ -570,6 +587,7 @@ async function renderFrames({
   heartbeatPulse = 2.5, motionBlur = 1.0,
   cameraShake = 0.0,
   progressCallback = null,
+  frameDir,
 }) {
   // Apply aspect ratio crop
   let { pixels: p, w, h } = applyAspectRatioCrop(pixels, origW, origH, aspectRatio);
@@ -586,12 +604,11 @@ async function renderFrames({
     numFrames, pushIn, hDrift, vDrift, handheld, fps, cameraShake,
   });
 
-  const frames = [];
+  let prevFrame = null;
 
   for (let fi = 0; fi < numFrames; fi++) {
     const cam = trajectory[fi];
 
-    // 1. Background parallax layer
     const bgLayer = renderParallaxBackground({
       pixels: p, w, h,
       scale: cam.scale,
@@ -600,7 +617,6 @@ async function renderFrames({
       rotRad: cam.rollAngle,
     });
 
-    // 2. Displacement field
     const { dx, dy } = createDisplacementField({
       depthMap: dm, h, w,
       pushIn, hDrift: hDrift + cam.noiseX, vDrift: vDrift + cam.noiseY,
@@ -610,45 +626,45 @@ async function renderFrames({
       rollAngle: cam.rollAngle,
     });
 
-    // 3. Warp image
     let frame = warpImage(p, dx, dy, h, w, edgeFill, bgLayer);
 
-    // 4. Rack focus / bokeh
     if (rackFocus > 0)
       frame = applyDynamicDofBokeh(frame, w, h, dm, cam.timeSec, rackFocus, subjectInfo.subjectDepth);
 
-    // 5. Specular shimmer
     if (specularShimmer > 0)
       frame = applySpecularShimmer(frame, w, h, cam.timeSec, specularShimmer);
 
-    // 6. Heartbeat pulse
     if (heartbeatPulse > 0)
       frame = applySubsurfaceVascularPulse(frame, w, h, dm, cam.timeSec, heartbeatPulse, subjectInfo.subjectDepth);
 
-    // 7. Ambient light pulse
     if (lightShift > 0)
       frame = applyAmbientLightPulse(frame, w, h, cam.timeSec, lightShift);
 
-    // 8. Dust particles
     if (dustParticles > 0)
       frame = particles.render(frame, w, h, cam.timeSec, dustParticles);
 
-    // 9. Film grain
     if (filmGrain > 0)
       frame = applyFilmGrain(frame, w, h, fi, filmGrain);
 
-    // 10. Post-parallax camera motion (zoom + shake)
     frame = applyPostParallaxCameraMotion({
       pixels: frame, w, h,
       timeSec: cam.timeSec, duration, zoomOut, cameraShake, handheld,
     });
 
-    frames.push({ data: frame, w, h });
+    if (motionBlur > 0)
+      frame = applyMotionBlur(frame, prevFrame, w, h, motionBlur);
+
+    prevFrame = frame;
+
+    // Write frame to disk immediately to avoid holding all frames in memory
+    const framePath = path.join(frameDir, `frame_${String(fi).padStart(5, '0')}.png`);
+    const pngBuf = await pixelsToPng(frame, w, h);
+    fs.writeFileSync(framePath, pngBuf);
 
     if (progressCallback) progressCallback(fi + 1, numFrames);
   }
 
-  return frames;
+  return { w, h, numFrames };
 }
 
 // Depth map cropping helper
@@ -679,53 +695,27 @@ function applyAspectRatioDepth(depthMap, origW, origH, newW, newH, aspectRatio) 
 // MP4 Encoding via ffmpeg
 // ─────────────────────────────────────────────
 
-async function encodeMp4(frames, outputPath, fps, tempDir) {
-  if (!frames.length) throw new Error('No frames to encode');
-
-  const { w, h } = frames[0];
-  const frameDir = path.join(tempDir, `frames_${uuidv4().slice(0, 8)}`);
-  fs.mkdirSync(frameDir, { recursive: true });
-
+async function encodeMp4(frameDir, outputPath, fps) {
+  // Find ffmpeg
+  let ffmpegPath = 'ffmpeg';
   try {
-    // Save each frame as PNG
-    for (let i = 0; i < frames.length; i++) {
-      const framePath = path.join(frameDir, `frame_${String(i).padStart(5, '0')}.png`);
-      const canvas = createCanvas(w, h);
-      const ctx = canvas.getContext('2d');
-      const imageData = ctx.createImageData(w, h);
-      imageData.data.set(frames[i].data);
-      ctx.putImageData(imageData, 0, 0);
-      const pngBuf = canvas.toBuffer('image/png');
-      fs.writeFileSync(framePath, pngBuf);
-    }
+    const { stdout } = require('child_process').spawnSync('which', ['ffmpeg'], { encoding: 'utf8' });
+    if (stdout.trim()) ffmpegPath = stdout.trim();
+  } catch {}
 
-    // Find ffmpeg
-    let ffmpegPath = 'ffmpeg';
-    try {
-      const { stdout } = require('child_process').spawnSync('which', ['ffmpeg'], { encoding: 'utf8' });
-      if (stdout.trim()) ffmpegPath = stdout.trim();
-    } catch {}
+  const result = spawnSync(ffmpegPath, [
+    '-y',
+    '-framerate', String(fps),
+    '-i', path.join(frameDir, 'frame_%05d.png'),
+    '-c:v', 'libx264',
+    '-pix_fmt', 'yuv420p',
+    '-crf', '17',
+    '-preset', 'medium',
+    outputPath,
+  ], { encoding: 'utf8', timeout: 300000 });
 
-    // Encode with ffmpeg
-    const result = spawnSync(ffmpegPath, [
-      '-y',
-      '-framerate', String(fps),
-      '-i', path.join(frameDir, 'frame_%05d.png'),
-      '-c:v', 'libx264',
-      '-pix_fmt', 'yuv420p',
-      '-crf', '17',
-      '-preset', 'medium',
-      outputPath,
-    ], { encoding: 'utf8', timeout: 300000 });
-
-    if (result.status !== 0) {
-      throw new Error(`ffmpeg failed: ${result.stderr}`);
-    }
-  } finally {
-    // Cleanup frame images
-    try {
-      fs.rmSync(frameDir, { recursive: true, force: true });
-    } catch {}
+  if (result.status !== 0) {
+    throw new Error(`ffmpeg failed: ${result.stderr}`);
   }
 
   return outputPath;
@@ -754,30 +744,40 @@ async function runPipeline({
 
   const { pixels, w: origW, h: origH } = await loadImageRGBA(imagePath);
 
+  const frameDir = path.join(tempDir, `frames_${uuidv4().slice(0, 8)}`);
+  fs.mkdirSync(frameDir, { recursive: true });
+
   if (progressCallback) progressCallback('Rendering frames', 0);
 
-  const frames = await renderFrames({
-    pixels, depthMap, origW, origH,
-    duration, fps, pushIn, hDrift, vDrift, handheld,
-    depthStrength, foregroundSeparation, edgeFill, aspectRatio, resolution,
-    zoomOut, breathing, watcherSway, blink,
-    dustParticles, lightShift, filmGrain,
-    microSaccades, edgeFlutter, rackFocus, specularShimmer,
-    heartbeatPulse, motionBlur, cameraShake,
-    progressCallback: (cur, total) => {
-      if (progressCallback) progressCallback('Rendering frames', Math.round((cur / total) * 100));
-    },
-  });
+  try {
+    await renderFramesToDisk({
+      pixels, depthMap, origW, origH,
+      duration, fps, pushIn, hDrift, vDrift, handheld,
+      depthStrength, foregroundSeparation, edgeFill, aspectRatio, resolution,
+      zoomOut, breathing, watcherSway, blink,
+      dustParticles, lightShift, filmGrain,
+      microSaccades, edgeFlutter, rackFocus, specularShimmer,
+      heartbeatPulse, motionBlur, cameraShake,
+      frameDir,
+      progressCallback: (cur, total) => {
+        if (progressCallback) progressCallback('Rendering frames', Math.round((cur / total) * 100));
+      },
+    });
 
-  if (progressCallback) progressCallback('Encoding MP4', 0);
+    if (progressCallback) progressCallback('Encoding MP4', 0);
 
-  const outputFilename = `motion_${uuidv4().slice(0, 8)}.mp4`;
-  const outputPath = path.join(outputDir, outputFilename);
-  await encodeMp4(frames, outputPath, fps, tempDir);
+    const outputFilename = `motion_${uuidv4().slice(0, 8)}.mp4`;
+    const outputPath = path.join(outputDir, outputFilename);
+    await encodeMp4(frameDir, outputPath, fps);
 
-  if (progressCallback) progressCallback('Complete', 100);
+    if (progressCallback) progressCallback('Complete', 100);
 
-  return outputPath;
+    return outputPath;
+  } finally {
+    try {
+      fs.rmSync(frameDir, { recursive: true, force: true });
+    } catch {}
+  }
 }
 
 module.exports = { runPipeline };

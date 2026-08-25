@@ -19,8 +19,6 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 const { v4: uuidv4 } = require('uuid');
-const { Worker, isMainThread, parentPort, workerData } = require('worker_threads');
-
 const depth = require('./depth');
 const { runPipeline } = require('./renderer');
 
@@ -48,11 +46,12 @@ const jobs = new Map();        // jobId → { status, progress, stage, resultPat
 const app = express();
 app.use(express.json());
 
-// CORS
+// CORS — restrict to the server's own origin; loosen via CORS_ORIGIN env var
 app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', '*');
-  res.header('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Content-Type,Authorization');
+  const allowedOrigin = process.env.CORS_ORIGIN || `http://localhost:${process.env.PORT || 8000}`;
+  res.header('Access-Control-Allow-Origin', allowedOrigin);
+  res.header('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type');
   if (req.method === 'OPTIONS') return res.sendStatus(200);
   next();
 });
@@ -79,10 +78,11 @@ const upload = multer({
   storage,
   limits: { fileSize: 50 * 1024 * 1024 }, // 50MB
   fileFilter: (req, file, cb) => {
-    const allowed = ['.jpg', '.jpeg', '.png', '.webp'];
+    const allowedExts = ['.jpg', '.jpeg', '.png', '.webp'];
+    const allowedMimes = ['image/jpeg', 'image/png', 'image/webp'];
     const ext = path.extname(file.originalname).toLowerCase();
-    if (!allowed.includes(ext)) {
-      return cb(new Error(`Unsupported format: ${ext}`));
+    if (!allowedExts.includes(ext) || !allowedMimes.includes(file.mimetype)) {
+      return cb(new Error(`Unsupported format: ${ext} (${file.mimetype})`));
     }
     cb(null, true);
   },
@@ -94,23 +94,14 @@ const upload = multer({
 
 /** GET /api/health */
 app.get('/api/health', async (req, res) => {
-  try {
-    const jsInfo = jsDepth.getModelInfo();
-    return res.json({
-      status: 'ok',
-      device: jsInfo.device || 'onnx-js',
-      model: jsInfo.model || 'Depth Anything V2 Small (JS)',
-      model_loaded: true,
-      runtime: 'node.js',
-    });
-  } catch (e) {
-    return res.json({
-      status: 'ok',
-      device: 'node-js',
-      model: 'Depth Anything V2 Small',
-      model_loaded: true,
-    });
-  }
+  const info = depth.getModelInfo();
+  return res.json({
+    status: 'ok',
+    device: info.device || 'onnx-js',
+    model: info.model || 'Depth Anything V2 Small (JS)',
+    model_loaded: info.loaded,
+    runtime: 'node.js',
+  });
 });
 
 /** POST /api/upload */
