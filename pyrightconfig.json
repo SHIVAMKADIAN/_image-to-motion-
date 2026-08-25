@@ -1,0 +1,6 @@
+{
+  "extraPaths": [
+    "image-motion-studio",
+    "image-motion-studio/backend"
+  ]
+}

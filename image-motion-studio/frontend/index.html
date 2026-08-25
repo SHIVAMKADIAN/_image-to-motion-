@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Image Motion Studio — Cinematic Motion Engine</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Top Bar -->
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 26 26" fill="none">
+          <circle cx="13" cy="13" r="11.5" stroke="#E3A24D" stroke-width="1.3"/>
+          <circle cx="13" cy="13" r="6.5" stroke="#E3A24D" stroke-width="1.3"/>
+          <circle cx="13" cy="13" r="2" fill="#E3A24D"/>
+        </svg>
+      </span>
+      <div class="brand-text">
+        <span class="brand-name">Image Motion Studio</span>
+        <span class="brand-tag">Cinematic Engine</span>
+      </div>
+    </div>
+    <div class="topbar-right">
+      <div class="server-badge" id="serverBadge">
+        <span class="status-dot pulse" id="serverDot"></span>
+        <span id="serverStatusText">Connecting...</span>
+      </div>
+      <span class="device-badge" id="deviceBadge">MPS / GPU</span>
+    </div>
+  </header>
+
+  <!-- Main Workspace -->
+  <main class="workspace">
+
+    <!-- Left Column: Viewport, Previews, Player -->
+    <section class="viewport-column">
+
+      <!-- View Selector Tabs -->
+      <div class="view-tabs">
+        <button class="tab-btn active" data-tab="preview" id="tabPreview">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+          Interactive Preview
+        </button>
+        <button class="tab-btn" data-tab="depth" id="tabDepth" disabled>
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+          Depth Map
+        </button>
+        <button class="tab-btn" data-tab="result" id="tabResult" disabled>
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+          Rendered MP4
+        </button>
+      </div>
+
+      <!-- Viewfinder Container -->
+      <div class="viewfinder" id="viewfinder">
+        <!-- Interactive Canvas / Frame Layer -->
+        <div class="frame" id="frame">
+          <div class="parallax-layer" id="parallaxLayer">
+            <img id="parallaxImg" alt="" draggable="false">
+          </div>
+          <img id="previewImg" alt="Input Preview" draggable="false">
+        </div>
+
+        <!-- Depth Map Display -->
+        <div class="depth-display" id="depthDisplay" hidden>
+          <img id="depthImg" alt="Depth map visualizer" draggable="false">
+        </div>
+
+        <!-- Result Video Player -->
+        <div class="video-player-container" id="videoContainer" hidden>
+          <video id="resultVideo" loop playsinline controls></video>
+        </div>
+
+        <!-- Cinematic Viewfinder Accents -->
+        <div class="bracket tl"></div>
+        <div class="bracket tr"></div>
+        <div class="bracket bl"></div>
+        <div class="bracket br"></div>
+
+        <!-- Real-time HUD -->
+        <div class="hud" id="hud">
+          <span>ZOOM <b id="hudZoom">100%</b></span>
+          <span>SHAKE <b id="hudShake">0.10</b></span>
+          <span>DEPTH <b id="hudDepth">9.0</b></span>
+          <span>RES <b id="hudRes">1080p</b></span>
+        </div>
+
+        <!-- Dropzone Overlay -->
+        <div class="dropzone-overlay" id="dropOverlay">
+          <div class="drop-icon">
+            <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M12 16V4M12 4L7 9M12 4l5 5" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <h3>Drag &amp; Drop Photo</h3>
+          <p>Drop your portrait or scene here, or choose from disk.<br>Supports JPG, PNG, WebP.</p>
+          <button class="btn primary" id="uploadBtn" type="button">Select Image</button>
+        </div>
+
+        <!-- Toast Notification -->
+        <div class="toast" id="toast" role="status"></div>
+      </div>
+
+      <!-- Transport Bar / Action Bar Under Viewport -->
+      <div class="viewport-toolbar">
+        <div class="transport-controls">
+          <button class="btn" id="playPauseBtn" type="button">
+            <svg id="playIcon" viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+            <svg id="pauseIcon" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" style="display:none"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+            <span id="playPauseLabel">Pause</span>
+          </button>
+          <button class="btn" id="resetAnimBtn" type="button">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 3-6.7" stroke-linecap="round"/><path d="M3 4v5h5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Reset
+          </button>
+        </div>
+
+        <div class="right-actions">
+          <button class="btn ghost" id="changeImgBtn" type="button">Replace Image</button>
+          <a class="btn primary" id="downloadBtn" download="motion-clip.mp4" style="display:none">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Download Video
+          </a>
+        </div>
+      </div>
+
+      <!-- Generation Progress Panel -->
+      <div class="render-progress-card" id="progressCard" hidden>
+        <div class="progress-header">
+          <div class="progress-title">
+            <span class="spinner"></span>
+            <span id="stageLabel">Rendering frames...</span>
+          </div>
+          <span class="progress-pct" id="progressPct">0%</span>
+        </div>
+        <div class="progress-bar-track">
+          <div class="progress-bar-fill" id="progressFill"></div>
+        </div>
+      </div>
+
+      <input type="file" id="fileInput" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" class="visually-hidden">
+    </section>
+
+    <!-- Right Column: Control Parameters & Presets -->
+    <aside class="controls-column">
+
+      <!-- Header Card -->
+      <div class="card preset-card">
+        <div class="card-header">
+          <span class="dot"></span>
+          <h2>Motion Settings</h2>
+        </div>
+        <p class="preset-desc">Standard Living Motion setup calibrated with living dynamics &amp; kinetic camera shake.</p>
+      </div>
+
+      <!-- Action Button -->
+      <button class="btn generate-btn" id="generateBtn" disabled>
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8" fill="currentColor"/></svg>
+        <span id="generateBtnText">Generate Motion Video</span>
+      </button>
+
+      <!-- Settings Accordion / Groups -->
+      <div class="control-groups">
+
+        <!-- Timing & Output Quality -->
+        <details class="control-group" open>
+          <summary class="group-title">Timing &amp; Format</summary>
+          <div class="group-content">
+            <div class="control-field">
+              <div class="field-header">
+                <label for="param_duration">Duration</label>
+                <span class="field-value" id="val_duration">2.0s</span>
+              </div>
+              <input type="range" id="param_duration" min="1.0" max="6.0" step="0.5" value="2.0">
+            </div>
+
+            <div class="field-grid-2">
+              <div class="control-field">
+                <label for="param_fps">Framerate</label>
+                <select id="param_fps" class="select-input">
+                  <option value="24">24 fps (Cinema)</option>
+                  <option value="30" selected>30 fps</option>
+                  <option value="60">60 fps</option>
+                </select>
+              </div>
+              <div class="control-field">
+                <label for="param_resolution">Resolution</label>
+                <select id="param_resolution" class="select-input">
+                  <option value="original">Original</option>
+                  <option value="1080p" selected>1080p FHD</option>
+                  <option value="720p">720p HD</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="field-grid-2">
+              <div class="control-field">
+                <label for="param_aspect_ratio">Aspect Ratio</label>
+                <select id="param_aspect_ratio" class="select-input">
+                  <option value="original" selected>Original</option>
+                  <option value="16:9">16:9 Landscape</option>
+                  <option value="9:16">9:16 Portrait</option>
+                  <option value="1:1">1:1 Square</option>
+                </select>
+              </div>
+              <div class="control-field">
+                <label for="param_edge_fill">Edge Fill</label>
+                <select id="param_edge_fill" class="select-input">
+                  <option value="inpaint" selected>Inpaint (Clean)</option>
+                  <option value="mirror">Mirror Reflect</option>
+                  <option value="blur">Ambient Blur</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </details>
+
+        <!-- Camera Motion -->
+        <details class="control-group" open>
+          <summary class="group-title">Camera Motion &amp; Kinetic Shake</summary>
+          <div class="group-content">
+            <div class="control-field">
+              <div class="field-header">
+                <label for="param_zoom_out">Camera Zoom Out (Final Output)</label>
+                <span class="field-value" id="val_zoom_out">5.0</span>
+              </div>
+              <input type="range" id="param_zoom_out" min="0" max="5.0" step="0.1" value="5.0">
+            </div>
+
+            <div class="field-grid-2">
+              <div class="control-field">
+                <div class="field-header">
+                  <label for="param_handheld">Handheld Drift</label>
+                  <span class="field-value" id="val_handheld">6.5</span>
+                </div>
+                <input type="range" id="param_handheld" min="0" max="10.0" step="0.5" value="6.5">
+              </div>
+              <div class="control-field">
+                <div class="field-header">
+                  <label for="param_camera_shake">Camera Shake</label>
+                  <span class="field-value" id="val_camera_shake">2.0</span>
+                </div>
+                <input type="range" id="param_camera_shake" min="0" max="5.0" step="0.1" value="2.0">
+              </div>
+            </div>
+          </div>
+        </details>
+
+        <!-- Depth & Parallax -->
+        <details class="control-group" open>
+          <summary class="group-title">Depth &amp; Parallax Dynamics</summary>
+          <div class="group-content">
+            <div class="control-field">
+              <div class="field-header">
+                <label for="param_depth_strength">Depth Displacement Strength</label>
+                <span class="field-value" id="val_depth_strength">15.0</span>
+              </div>
+              <input type="range" id="param_depth_strength" min="0" max="15.0" step="0.5" value="15.0">
+            </div>
+
+            <div class="control-field">
+              <div class="field-header">
+                <label for="param_foreground_separation">Foreground Layer Separation</label>
+                <span class="field-value" id="val_foreground_separation">10.0</span>
+              </div>
+              <input type="range" id="param_foreground_separation" min="0" max="10.0" step="0.5" value="10.0">
+            </div>
+          </div>
+        </details>
+
+        <!-- Bio-Motion Dynamics -->
+        <details class="control-group" open>
+          <summary class="group-title">Living Subject Dynamics</summary>
+          <div class="group-content">
+            <div class="control-field">
+              <div class="field-header">
+                <label for="param_breathing">Chest &amp; Shoulder Breathing</label>
+                <span class="field-value" id="val_breathing">10.0</span>
+              </div>
+              <input type="range" id="param_breathing" min="0" max="10.0" step="0.5" value="10.0">
+            </div>
+
+            <div class="control-field">
+              <div class="field-header">
+                <label for="param_watcher_sway">Foreground Natural Sway</label>
+                <span class="field-value" id="val_watcher_sway">10.0</span>
+              </div>
+              <input type="range" id="param_watcher_sway" min="0" max="10.0" step="0.5" value="10.0">
+            </div>
+
+            <div class="field-grid-2">
+              <div class="control-field">
+                <div class="field-header">
+                  <label for="param_micro_saccades">Ocular Micro-Saccades</label>
+                  <span class="field-value" id="val_micro_saccades">2.5</span>
+                </div>
+                <input type="range" id="param_micro_saccades" min="0" max="5.0" step="0.5" value="2.5">
+              </div>
+              <div class="control-field">
+                <div class="field-header">
+                  <label for="param_edge_flutter">Fabric/Edge Flutter</label>
+                  <span class="field-value" id="val_edge_flutter">1.0</span>
+                </div>
+                <input type="range" id="param_edge_flutter" min="0" max="5.0" step="0.5" value="1.0">
+              </div>
+            </div>
+
+            <div class="field-grid-2">
+              <div class="control-field">
+                <div class="field-header">
+                  <label for="param_heartbeat_pulse">Vascular Pulse</label>
+                  <span class="field-value" id="val_heartbeat_pulse">2.5</span>
+                </div>
+                <input type="range" id="param_heartbeat_pulse" min="0" max="5.0" step="0.5" value="2.5">
+              </div>
+              <div class="control-field toggle-field">
+                <label for="param_blink">Eyelid Blink</label>
+                <input type="checkbox" id="param_blink">
+              </div>
+            </div>
+          </div>
+        </details>
+
+        <!-- Atmosphere & Optics -->
+        <details class="control-group" open>
+          <summary class="group-title">Atmosphere &amp; Optical Physics</summary>
+          <div class="group-content">
+            <div class="field-grid-2">
+              <div class="control-field">
+                <div class="field-header">
+                  <label for="param_dust_particles">Dust Motes</label>
+                  <span class="field-value" id="val_dust_particles">1.0</span>
+                </div>
+                <input type="range" id="param_dust_particles" min="0" max="10.0" step="0.5" value="1.0">
+              </div>
+              <div class="control-field">
+                <div class="field-header">
+                  <label for="param_light_shift">Light Shift</label>
+                  <span class="field-value" id="val_light_shift">2.0</span>
+                </div>
+                <input type="range" id="param_light_shift" min="0" max="10.0" step="0.5" value="2.0">
+              </div>
+            </div>
+
+            <div class="field-grid-2">
+              <div class="control-field">
+                <div class="field-header">
+                  <label for="param_film_grain">35mm Grain</label>
+                  <span class="field-value" id="val_film_grain">3.0</span>
+                </div>
+                <input type="range" id="param_film_grain" min="0" max="10.0" step="0.5" value="3.0">
+              </div>
+              <div class="control-field">
+                <div class="field-header">
+                  <label for="param_rack_focus">Rack Focus / CoC</label>
+                  <span class="field-value" id="val_rack_focus">2.0</span>
+                </div>
+                <input type="range" id="param_rack_focus" min="0" max="10.0" step="0.5" value="2.0">
+              </div>
+            </div>
+
+            <div class="field-grid-2">
+              <div class="control-field">
+                <div class="field-header">
+                  <label for="param_specular_shimmer">Specular Shimmer</label>
+                  <span class="field-value" id="val_specular_shimmer">2.0</span>
+                </div>
+                <input type="range" id="param_specular_shimmer" min="0" max="10.0" step="0.5" value="2.0">
+              </div>
+              <div class="control-field">
+                <div class="field-header">
+                  <label for="param_motion_blur">Motion Blur</label>
+                  <span class="field-value" id="val_motion_blur">1.0</span>
+                </div>
+                <input type="range" id="param_motion_blur" min="0" max="5.0" step="0.5" value="1.0">
+              </div>
+            </div>
+          </div>
+        </details>
+
+      </div>
+    </aside>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>

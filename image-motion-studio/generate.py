@@ -5,7 +5,7 @@ Usage:
     python generate.py <image_path> [output_dir]
 
 Output:
-    <name>_1.25s.mp4  — living cinematic clip at 2× speed (1.25 sec)
+    <name>_2.0s.mp4  — living cinematic clip with full optical & biological dynamics
 """
 
 import os
@@ -16,14 +16,17 @@ import shutil
 from pathlib import Path
 
 # Make sure backend modules are importable
-BACKEND_DIR = Path(__file__).resolve().parent / "backend"
-sys.path.insert(0, str(BACKEND_DIR))
+CURRENT_DIR = Path(__file__).resolve().parent
+BACKEND_DIR = CURRENT_DIR / "backend"
+for p in (str(CURRENT_DIR), str(BACKEND_DIR)):
+    if p not in sys.path:
+        sys.path.insert(0, p)
 
-from depth import estimate_depth
-from renderer import run_pipeline
+from backend.depth import estimate_depth
+from backend.renderer import run_pipeline
 
 # ─────────────────────────────────────────────
-# DEFAULT SETTINGS (from the notebook)
+# DEFAULT SETTINGS (Living Cinematic Engine)
 # ─────────────────────────────────────────────
 DEFAULTS = dict(
     duration            = 2.0,
@@ -33,24 +36,32 @@ DEFAULTS = dict(
     edge_fill           = "inpaint",
 
     # Camera Motion
-    push_in             = 4.0,
-    h_drift             = 3.0,
-    v_drift             = 2.0,
-    handheld            = 8.0,
+    push_in             = 0.0,
+    h_drift             = 0.0,
+    v_drift             = 0.0,
+    handheld            = 6.5,
+    zoom_out            = 5.0,
 
     # Parallax / Depth
-    depth_strength      = 9.0,
-    foreground_separation = 9.0,
+    depth_strength      = 15.0,
+    foreground_separation = 10.0,
 
-    # Bio-Motion
-    breathing           = 9.0,
-    watcher_sway        = 9.0,
-    blink               = False,   # removed per user notes
+    # Bio-Motion & Physiological Dynamics
+    breathing           = 10.0,
+    watcher_sway        = 10.0,
+    blink               = False,
+    micro_saccades      = 2.5,
+    edge_flutter        = 1.0,
+    heartbeat_pulse     = 2.5,
 
-    # Atmosphere
-    dust_particles      = 1.5,
-    light_shift         = 3.0,
-    film_grain          = 5.0,
+    # Atmosphere & Optical Physics
+    dust_particles      = 1.0,
+    light_shift         = 2.0,
+    film_grain          = 3.0,
+    rack_focus          = 2.0,
+    specular_shimmer    = 2.0,
+    motion_blur         = 1.0,
+    camera_shake        = 2.0,
 )
 
 

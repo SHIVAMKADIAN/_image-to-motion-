@@ -1,70 +1,37 @@
 /**
- * Image Motion Studio — Frontend Presets
- *
- * Each preset defines a named set of rendering parameters.
- * The "living-cinematic" preset is the default and matches
- * the backend system defaults.
+ * Image Motion Studio — Fixed Motion Configuration
  */
 
 const PRESETS = {
-  // The frontend's default — aligned to backend system defaults.
-  "living-cinematic": {
-    label: "Living Cinematic (Alive Human + Room)",
-    description: "Breathing subject, swaying foreground, dust and warm light.",
+  "default": {
+    label: "Living Motion Studio (Standard)",
+    description: "2.0s 1080p, 5.0 Zoom Out, 6.5 Handheld Drift, 2.0 Camera Shake, 15.0 Depth, 10.0 Separation, 10.0 Breathing, 10.0 Sway.",
     params: {
-      pushIn: 1.0, hDrift: 3.0, vDrift: 2.0, handheld: 6.0,
-      depthStrength: 9.0, foregroundSeparation: 9.0,
-      breathing: 9.0, watcherSway: 9.0, blink: false,
-      dustParticles: 2.5, lightShift: 3.0, filmGrain: 5.0,
-    },
-  },
-
-  "subtle-breathing": {
-    label: "Living Portrait (Breathing + Gaze)",
-    description: "Breath foregrounded, camera almost static. For a face filling the frame.",
-    params: {
-      pushIn: 1.0, hDrift: 3.0, vDrift: 2.0, handheld: 6.0,
-      depthStrength: 9.0, foregroundSeparation: 9.0,
-      breathing: 9.0, watcherSway: 9.0, blink: false,
-      dustParticles: 2.5, lightShift: 3.0, filmGrain: 5.0,
-    },
-  },
-
-  // Hard foreground sway with the blink deliberately off — the silhouette is
-  // meant to read as watching, not as alive.
-  "voyeur-stalker": {
-    label: "Voyeur Watcher (Doorway Silhouette Sway)",
-    description: "Heavy foreground sway, high depth separation, no blink.",
-    params: {
-      pushIn: 1.0, hDrift: 3.0, vDrift: 2.0, handheld: 6.0,
-      depthStrength: 9.0, foregroundSeparation: 9.0,
-      breathing: 9.0, watcherSway: 9.0, blink: false,
-      dustParticles: 2.5, lightShift: 3.0, filmGrain: 5.0,
-    },
-  },
-
-  // Camera only. Everything organic and atmospheric off, which also makes this
-  // the baseline to diff the others against when a render looks wrong.
-  "push-in-parallax": {
-    label: "Push-In + Parallax (Classic)",
-    description: "Camera move only — no breathing, dust, light or grain.",
-    params: {
-      pushIn: 1.0, hDrift: 3.0, vDrift: 2.0, handheld: 6.0,
-      depthStrength: 9.0, foregroundSeparation: 9.0,
-      breathing: 9.0, watcherSway: 9.0, blink: false,
-      dustParticles: 2.5, lightShift: 3.0, filmGrain: 5.0,
-    },
-  },
-
-  // The only preset with negative vertical drift: the camera rises slightly.
-  "cinematic-drift": {
-    label: "Atmospheric Drift",
-    description: "Lateral drift with a slow rise, heavy dust and light.",
-    params: {
-      pushIn: 1.0, hDrift: 3.0, vDrift: 2.0, handheld: 6.0,
-      depthStrength: 9.0, foregroundSeparation: 9.0,
-      breathing: 9.0, watcherSway: 9.0, blink: false,
-      dustParticles: 2.5, lightShift: 3.0, filmGrain: 5.0,
+      duration: 2.0,
+      fps: 30,
+      resolution: "1080p",
+      aspectRatio: "original",
+      edgeFill: "inpaint",
+      pushIn: 0.0,
+      hDrift: 0.0,
+      vDrift: 0.0,
+      zoomOut: 5.0,
+      handheld: 6.5,
+      cameraShake: 2.0,
+      depthStrength: 15.0,
+      foregroundSeparation: 10.0,
+      breathing: 10.0,
+      watcherSway: 10.0,
+      blink: false,
+      microSaccades: 2.5,
+      edgeFlutter: 1.0,
+      heartbeatPulse: 2.5,
+      dustParticles: 1.0,
+      lightShift: 2.0,
+      filmGrain: 3.0,
+      rackFocus: 2.0,
+      specularShimmer: 2.0,
+      motionBlur: 1.0,
     },
   },
 };

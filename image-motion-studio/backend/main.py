@@ -30,6 +30,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 UPLOADS_DIR = BASE_DIR / "uploads"
 OUTPUTS_DIR = BASE_DIR / "outputs"
 TEMP_DIR = BASE_DIR / "temp"
+FRONTEND_DIR = BASE_DIR / "frontend"
 
 for d in [UPLOADS_DIR, OUTPUTS_DIR, TEMP_DIR]:
     d.mkdir(parents=True, exist_ok=True)
@@ -70,25 +71,57 @@ class GenerateRequest(BaseModel):
     resolution: str = "1080p"
     aspect_ratio: str = "original"
     # Camera Motion
-    push_in: float = 4.0
-    horizontal_drift: float = 3.0
-    vertical_drift: float = 2.0
-    handheld: float = 8.0
+    push_in: float = 0.0
+    horizontal_drift: float = 0.0
+    vertical_drift: float = 0.0
+    handheld: float = 6.5
+    camera_shake: float = 2.0
+    zoom_out: float = 5.0
+    zoom_in: float = 5.0
     # Parallax / Depth
-    depth_strength: float = 9.0
-    foreground_separation: float = 9.0
+    depth_strength: float = 15.0
+    foreground_separation: float = 10.0
     edge_fill: str = "inpaint"
     # Bio-Motion
-    breathing: float = 9.0
-    watcher_sway: float = 9.0
+    breathing: float = 10.0
+    watcher_sway: float = 10.0
     blink: bool = False
-    # Atmosphere
-    dust_particles: float = 1.5
-    light_shift: float = 3.0
-    film_grain: float = 5.0
+    micro_saccades: float = 2.5
+    edge_flutter: float = 1.0
+    heartbeat_pulse: float = 2.5
+    # Atmosphere & Optics
+    dust_particles: float = 1.0
+    light_shift: float = 2.0
+    film_grain: float = 3.0
+    rack_focus: float = 2.0
+    specular_shimmer: float = 2.0
+    motion_blur: float = 1.0
 
 
 # --- Endpoints ---
+
+@app.get("/")
+async def root():
+    """Serve frontend index.html."""
+    index_file = FRONTEND_DIR / "index.html"
+    if index_file.exists():
+        return FileResponse(str(index_file))
+    return {
+        "message": "Image Motion Studio API is running",
+        "docs": "/docs",
+        "health": "/api/health"
+    }
+
+
+@app.get("/style.css")
+async def get_css():
+    return FileResponse(str(FRONTEND_DIR / "style.css"))
+
+
+@app.get("/app.js")
+async def get_js():
+    return FileResponse(str(FRONTEND_DIR / "app.js"))
+
 
 @app.get("/api/health")
 async def health():
@@ -240,6 +273,7 @@ def _run_generation_job(job_id: str, request: GenerateRequest):
             h_drift=request.horizontal_drift,
             v_drift=request.vertical_drift,
             handheld=request.handheld,
+            zoom_out=getattr(request, "zoom_out", getattr(request, "zoom_in", 1.0)),
             depth_strength=request.depth_strength,
             foreground_separation=request.foreground_separation,
             edge_fill=request.edge_fill,
@@ -248,9 +282,16 @@ def _run_generation_job(job_id: str, request: GenerateRequest):
             breathing=request.breathing,
             watcher_sway=request.watcher_sway,
             blink=request.blink,
+            micro_saccades=request.micro_saccades,
+            edge_flutter=request.edge_flutter,
+            heartbeat_pulse=request.heartbeat_pulse,
             dust_particles=request.dust_particles,
             light_shift=request.light_shift,
             film_grain=request.film_grain,
+            rack_focus=request.rack_focus,
+            specular_shimmer=request.specular_shimmer,
+            motion_blur=request.motion_blur,
+            camera_shake=request.camera_shake,
             progress_callback=progress_cb,
         )
 
@@ -305,6 +346,13 @@ async def get_result(job_id: str):
         media_type="video/mp4",
         filename=filename,
     )
+
+
+# --- Serve Frontend UI ---
+FRONTEND_DIR = BASE_DIR / "frontend"
+if FRONTEND_DIR.exists():
+    app.mount("/", StaticFiles(directory=str(FRONTEND_DIR), html=True), name="frontend")
+
 
 
 if __name__ == "__main__":
