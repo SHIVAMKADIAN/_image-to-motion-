@@ -21,8 +21,7 @@ const fs = require('fs');
 const { v4: uuidv4 } = require('uuid');
 const { Worker, isMainThread, parentPort, workerData } = require('worker_threads');
 
-const jsDepth = require('./depth');
-const depthClient = require('./depthClient');
+const depth = require('./depth');
 const { runPipeline } = require('./renderer');
 
 // ─────────────────────────────────────────────
@@ -165,16 +164,7 @@ app.post('/api/depth', async (req, res) => {
   const depthPath = path.join(TEMP_DIR, depthFilename);
 
   try {
-    let result;
-    try {
-      // Primary: Pure JavaScript depth estimation via Transformers.js ONNX
-      result = await jsDepth.estimateDepth(info.filepath, depthPath);
-    } catch (jsErr) {
-      console.warn('[Depth] JS depth estimation fallback to Python service if available:', jsErr.message);
-      result = await depthClient.estimateDepth(info.filepath, depthPath);
-    }
-
-    const { depthMap, h, w, device } = result;
+    const { depthMap, h, w, device } = await depth.estimateDepth(info.filepath, depthPath);
     depthMaps.set(imageId, { depthMap, h, w });
 
     return res.json({

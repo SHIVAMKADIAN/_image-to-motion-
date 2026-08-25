@@ -1,44 +1,30 @@
 /**
- * depthClient.js — Calls the Python depth micro-service (depth_service.py)
- * and returns a Float32Array depth map that Node.js can use directly.
+ * depthClient.js — Pure In-Process JavaScript Depth Estimation Interface
+ * Directly uses depth.js (Transformers.js ONNX) without any HTTP service or Python backend.
  */
 
 'use strict';
 
-const axios = require('axios');
-
-const DEPTH_SERVICE_URL = process.env.DEPTH_SERVICE_URL || 'http://127.0.0.1:8001';
+const depth = require('./depth');
 
 /**
- * Estimate depth for an image via the Python depth service.
- * @param {string} imagePath - Absolute path to input image
- * @param {string} outputPath - Where to save the depth PNG visualisation
- * @returns {{ depthMap: Float32Array, h: number, w: number, device: string }}
+ * Estimate depth directly in JavaScript via ONNX Runtime.
+ * @param {string} imagePath 
+ * @param {string} outputPath 
+ * @returns {Promise<{ depthMap: Float32Array, h: number, w: number, device: string }>}
  */
 async function estimateDepth(imagePath, outputPath) {
-  const response = await axios.post(
-    `${DEPTH_SERVICE_URL}/estimate`,
-    { image_path: imagePath, output_path: outputPath },
-    { timeout: 120_000 }
-  );
-
-  const { depth_map_b64, shape, device } = response.data;
-  const [h, w] = shape;
-
-  // Decode base64 → Buffer → Float32Array
-  const buf = Buffer.from(depth_map_b64, 'base64');
-  const depthMap = new Float32Array(buf.buffer, buf.byteOffset, buf.byteLength / 4);
-
-  return { depthMap: new Float32Array(depthMap), h, w, device };
+  return await depth.estimateDepth(imagePath, outputPath);
 }
 
 /**
- * Health check for the depth service.
- * @returns {{ status, device, model, modelLoaded }}
+ * Health check for the in-process JS depth model.
  */
 async function getDepthServiceHealth() {
-  const res = await axios.get(`${DEPTH_SERVICE_URL}/health`, { timeout: 5000 });
-  return res.data;
+  return depth.getModelInfo();
 }
 
-module.exports = { estimateDepth, getDepthServiceHealth };
+module.exports = {
+  estimateDepth,
+  getDepthServiceHealth,
+};
