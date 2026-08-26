@@ -21,8 +21,7 @@ const fs = require('fs');
 const { v4: uuidv4 } = require('uuid');
 const { Worker, isMainThread, parentPort, workerData } = require('worker_threads');
 
-const jsDepth = require('./depth');
-const depthClient = require('./depthClient');
+const { estimateDepth, getDepthServiceHealth } = require('./depthClient');
 const { runPipeline } = require('./renderer');
 
 // ─────────────────────────────────────────────
@@ -96,20 +95,20 @@ const upload = multer({
 /** GET /api/health */
 app.get('/api/health', async (req, res) => {
   try {
-    const jsInfo = jsDepth.getModelInfo();
+    const depthHealth = await getDepthServiceHealth();
     return res.json({
       status: 'ok',
-      device: jsInfo.device || 'onnx-js',
-      model: jsInfo.model || 'Depth Anything V2 Small (JS)',
-      model_loaded: true,
-      runtime: 'node.js',
+      device: depthHealth.device || 'cpu',
+      model: depthHealth.model || 'Depth Anything V2 Small',
+      model_loaded: depthHealth.model_loaded || false,
     });
-  } catch (e) {
+  } catch {
     return res.json({
       status: 'ok',
-      device: 'node-js',
+      device: 'cpu',
       model: 'Depth Anything V2 Small',
-      model_loaded: true,
+      model_loaded: false,
+      depth_service: 'offline',
     });
   }
 });
@@ -165,16 +164,7 @@ app.post('/api/depth', async (req, res) => {
   const depthPath = path.join(TEMP_DIR, depthFilename);
 
   try {
-    let result;
-    try {
-      // Primary: Pure JavaScript depth estimation via Transformers.js ONNX
-      result = await jsDepth.estimateDepth(info.filepath, depthPath);
-    } catch (jsErr) {
-      console.warn('[Depth] JS depth estimation fallback to Python service if available:', jsErr.message);
-      result = await depthClient.estimateDepth(info.filepath, depthPath);
-    }
-
-    const { depthMap, h, w, device } = result;
+    const { depthMap, h, w, device } = await estimateDepth(info.filepath, depthPath);
     depthMaps.set(imageId, { depthMap, h, w });
 
     return res.json({
@@ -182,7 +172,7 @@ app.post('/api/depth', async (req, res) => {
       depth_url: `/temp/${depthFilename}`,
       status: 'complete',
       model: 'Depth Anything V2 Small',
-      device: (device || 'ONNX-JS').toUpperCase(),
+      device: device || 'CPU',
     });
   } catch (err) {
     console.error('[Depth Error]', err);
@@ -332,12 +322,10 @@ if (fs.existsSync(FRONTEND_DIR)) {
 // Start
 // ─────────────────────────────────────────────
 const PORT = process.env.PORT || 8000;
-
-if (require.main === module) {
-  app.listen(PORT, '0.0.0.0', () => {
-    console.log(`[ImageMotionStudio] 100% JavaScript Node.js server running on http://0.0.0.0:${PORT}`);
-    console.log(`[ImageMotionStudio] Frontend: ${FRONTEND_DIR}`);
-  });
-}
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`[ImageMotionStudio] Node.js server running on http://0.0.0.0:${PORT}`);
+  console.log(`[ImageMotionStudio] Frontend: ${FRONTEND_DIR}`);
+  console.log(`[ImageMotionStudio] Depth service: ${process.env.DEPTH_SERVICE_URL || 'http://127.0.0.1:8001'}`);
+});
 
 module.exports = app;
