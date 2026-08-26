@@ -1,0 +1,9 @@
+# Minimal Python requirements for depth estimation micro-service only
+# Install: pip install -r requirements-depth.txt
+torch
+torchvision
+transformers
+Pillow
+numpy
+opencv-python-headless
+flask

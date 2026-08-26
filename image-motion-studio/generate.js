@@ -12,8 +12,8 @@
 
 const fs = require('fs');
 const path = require('path');
-const { estimateDepth } = require('./backend/depth');
-const { runPipeline } = require('./backend/renderer');
+const { estimateDepth } = require('./backend-node/depth');
+const { runPipeline } = require('./backend-node/renderer');
 
 // ─────────────────────────────────────────────
 // DEFAULT SETTINGS (Living Cinematic Engine)
