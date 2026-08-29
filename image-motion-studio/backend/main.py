@@ -74,10 +74,10 @@ class GenerateRequest(BaseModel):
     push_in: float = 0.0
     horizontal_drift: float = 0.0
     vertical_drift: float = 0.0
-    handheld: float = 6.5
+    handheld: float = 5.0
     camera_shake: float = 0.0
-    zoom_out: float = 5.0
-    zoom_in: float = 5.0
+    zoom_out: float = 2.5
+    zoom_in: float = 2.5
     # Parallax / Depth
     depth_strength: float = 15.0
     foreground_separation: float = 10.0
@@ -90,11 +90,11 @@ class GenerateRequest(BaseModel):
     edge_flutter: float = 1.0
     heartbeat_pulse: float = 2.5
     # Atmosphere & Optics
-    dust_particles: float = 1.0
+    dust_particles: float = 0.0
     light_shift: float = 2.0
     film_grain: float = 3.0
     rack_focus: float = 2.0
-    specular_shimmer: float = 2.0
+    specular_shimmer: float = 10.0
     motion_blur: float = 1.0
 
 

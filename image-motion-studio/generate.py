@@ -39,8 +39,8 @@ DEFAULTS = dict(
     push_in             = 0.0,
     h_drift             = 0.0,
     v_drift             = 0.0,
-    handheld            = 6.5,
-    zoom_out            = 5.0,
+    handheld            = 5.0,
+    zoom_out            = 2.5,
 
     # Parallax / Depth
     depth_strength      = 15.0,
@@ -55,11 +55,11 @@ DEFAULTS = dict(
     heartbeat_pulse     = 2.5,
 
     # Atmosphere & Optical Physics
-    dust_particles      = 1.0,
+    dust_particles      = 0.0,
     light_shift         = 2.0,
     film_grain          = 3.0,
     rack_focus          = 2.0,
-    specular_shimmer    = 2.0,
+    specular_shimmer    = 10.0,
     motion_blur         = 1.0,
     camera_shake        = 0.0,
 )
