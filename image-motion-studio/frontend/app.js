@@ -11,10 +11,10 @@
 
   /* ────────── Default Motion Configuration ────────── */
   const DEFAULT_PARAMS = {
-    duration: 2.0, fps: 30, resolution: "1080p", aspectRatio: "original", edgeFill: "inpaint",
-    pushIn: 0.0, horizontalDrift: 0.0, verticalDrift: 0.0, handheld: 6.5, cameraShake: 2.0, zoomOut: 5.0,
-    depthStrength: 15.0, foregroundSeparation: 10.0,
-    breathing: 10.0, watcherSway: 10.0, blink: false,
+    duration: 2.0, fps: 30, resolution: "1080p", aspectRatio: "original", edgeFill: "mirror",
+    pushIn: 0.0, horizontalDrift: 0.0, verticalDrift: 0.0, handheld: 6.5, cameraShake: 0.0, zoomIn: 0.0, zoomOut: 0.0, horizontalWiggle: 5.0,
+    depthStrength: 25.0, foregroundSeparation: 20.0,
+    breathing: 9.0, watcherSway: 9.0, blink: false,
     microSaccades: 2.5, edgeFlutter: 1.0, heartbeatPulse: 2.5,
     dustParticles: 1.0, lightShift: 2.0, filmGrain: 3.0,
     rackFocus: 2.0, specularShimmer: 2.0, motionBlur: 1.0,
@@ -109,7 +109,7 @@
   /* ────────── Sliders & Inputs Binding ────────── */
   const paramKeys = [
     "duration", "fps", "resolution", "aspect_ratio", "edge_fill",
-    "zoom_out", "handheld", "camera_shake",
+    "zoom_in", "zoom_out", "horizontal_wiggle", "handheld", "camera_shake",
     "depth_strength", "foreground_separation",
     "breathing", "watcher_sway", "micro_saccades", "edge_flutter", "heartbeat_pulse", "blink",
     "dust_particles", "light_shift", "film_grain", "rack_focus", "specular_shimmer", "motion_blur"
@@ -135,8 +135,8 @@
     const mapKey = {
       aspectRatio: "aspect_ratio",
       edgeFill: "edge_fill",
+      zoomIn: "zoom_in",
       zoomOut: "zoom_out",
-      zoomIn: "zoom_out",
       cameraShake: "camera_shake",
       depthStrength: "depth_strength",
       foregroundSeparation: "foreground_separation",
@@ -149,7 +149,8 @@
       filmGrain: "film_grain",
       rackFocus: "rack_focus",
       specularShimmer: "specular_shimmer",
-      motionBlur: "motion_blur"
+      motionBlur: "motion_blur",
+      horizontalWiggle: "horizontal_wiggle"
     };
 
     for (const [k, v] of Object.entries(p)) {

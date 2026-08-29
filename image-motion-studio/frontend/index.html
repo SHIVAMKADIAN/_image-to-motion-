@@ -213,8 +213,8 @@
               <div class="control-field">
                 <label for="param_edge_fill">Edge Fill</label>
                 <select id="param_edge_fill" class="select-input">
-                  <option value="inpaint" selected>Inpaint (Clean)</option>
-                  <option value="mirror">Mirror Reflect</option>
+                  <option value="inpaint">Inpaint (Clean)</option>
+                  <option value="mirror" selected>Mirror Reflect</option>
                   <option value="blur">Ambient Blur</option>
                 </select>
               </div>
@@ -226,12 +226,29 @@
         <details class="control-group" open>
           <summary class="group-title">Camera Motion &amp; Kinetic Shake</summary>
           <div class="group-content">
+            <div class="field-grid-2">
+              <div class="control-field">
+                <div class="field-header">
+                  <label for="param_zoom_in">Camera Zoom In</label>
+                  <span class="field-value" id="val_zoom_in">0.0</span>
+                </div>
+                <input type="range" id="param_zoom_in" min="0" max="5.0" step="0.1" value="0.0">
+              </div>
+              <div class="control-field">
+                <div class="field-header">
+                  <label for="param_zoom_out">Camera Zoom Out</label>
+                  <span class="field-value" id="val_zoom_out">0.0</span>
+                </div>
+                <input type="range" id="param_zoom_out" min="0" max="5.0" step="0.1" value="0.0">
+              </div>
+            </div>
+
             <div class="control-field">
               <div class="field-header">
-                <label for="param_zoom_out">Camera Zoom Out (Final Output)</label>
-                <span class="field-value" id="val_zoom_out">5.0</span>
+                <label for="param_horizontal_wiggle">Left-Right Wiggle</label>
+                <span class="field-value" id="val_horizontal_wiggle">5.0</span>
               </div>
-              <input type="range" id="param_zoom_out" min="0" max="5.0" step="0.1" value="5.0">
+              <input type="range" id="param_horizontal_wiggle" min="0" max="10.0" step="0.5" value="5.0">
             </div>
 
             <div class="field-grid-2">
@@ -260,17 +277,17 @@
             <div class="control-field">
               <div class="field-header">
                 <label for="param_depth_strength">Depth Displacement Strength</label>
-                <span class="field-value" id="val_depth_strength">15.0</span>
+                <span class="field-value" id="val_depth_strength">25.0</span>
               </div>
-              <input type="range" id="param_depth_strength" min="0" max="15.0" step="0.5" value="15.0">
+              <input type="range" id="param_depth_strength" min="0" max="30.0" step="0.5" value="25.0">
             </div>
 
             <div class="control-field">
               <div class="field-header">
                 <label for="param_foreground_separation">Foreground Layer Separation</label>
-                <span class="field-value" id="val_foreground_separation">10.0</span>
+                <span class="field-value" id="val_foreground_separation">20.0</span>
               </div>
-              <input type="range" id="param_foreground_separation" min="0" max="10.0" step="0.5" value="10.0">
+              <input type="range" id="param_foreground_separation" min="0" max="25.0" step="0.5" value="20.0">
             </div>
           </div>
         </details>
@@ -282,17 +299,17 @@
             <div class="control-field">
               <div class="field-header">
                 <label for="param_breathing">Chest &amp; Shoulder Breathing</label>
-                <span class="field-value" id="val_breathing">10.0</span>
+                <span class="field-value" id="val_breathing">9.0</span>
               </div>
-              <input type="range" id="param_breathing" min="0" max="10.0" step="0.5" value="10.0">
+              <input type="range" id="param_breathing" min="0" max="10.0" step="0.5" value="9.0">
             </div>
 
             <div class="control-field">
               <div class="field-header">
                 <label for="param_watcher_sway">Foreground Natural Sway</label>
-                <span class="field-value" id="val_watcher_sway">10.0</span>
+                <span class="field-value" id="val_watcher_sway">9.0</span>
               </div>
-              <input type="range" id="param_watcher_sway" min="0" max="10.0" step="0.5" value="10.0">
+              <input type="range" id="param_watcher_sway" min="0" max="10.0" step="0.5" value="9.0">
             </div>
 
             <div class="field-grid-2">

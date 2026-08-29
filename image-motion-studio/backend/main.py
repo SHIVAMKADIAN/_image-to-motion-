@@ -76,8 +76,9 @@ class GenerateRequest(BaseModel):
     vertical_drift: float = 0.0
     handheld: float = 5.0
     camera_shake: float = 0.0
-    zoom_out: float = 2.5
-    zoom_in: float = 2.5
+    horizontal_wiggle: float = 0.0
+    zoom_out: float = 0.0
+    zoom_in: float = 0.0
     # Parallax / Depth
     depth_strength: float = 15.0
     foreground_separation: float = 10.0
@@ -273,7 +274,8 @@ def _run_generation_job(job_id: str, request: GenerateRequest):
             h_drift=request.horizontal_drift,
             v_drift=request.vertical_drift,
             handheld=request.handheld,
-            zoom_out=getattr(request, "zoom_out", getattr(request, "zoom_in", 1.0)),
+            zoom_out=request.zoom_out,
+            zoom_in=request.zoom_in,
             depth_strength=request.depth_strength,
             foreground_separation=request.foreground_separation,
             edge_fill=request.edge_fill,
@@ -292,6 +294,7 @@ def _run_generation_job(job_id: str, request: GenerateRequest):
             specular_shimmer=request.specular_shimmer,
             motion_blur=request.motion_blur,
             camera_shake=request.camera_shake,
+            horizontal_wiggle=request.horizontal_wiggle,
             progress_callback=progress_cb,
         )
 

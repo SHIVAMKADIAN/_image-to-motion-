@@ -28,6 +28,7 @@ def generate_camera_trajectory(
     handheld: float,
     fps: int,
     camera_shake: float = 0.0,
+    horizontal_wiggle: float = 0.0,
 ) -> list[dict]:
     """
     Generate per-frame camera parameters with easing, organic handheld drift,
@@ -83,7 +84,15 @@ def generate_camera_trajectory(
         max_zoom_extra = 0.04 + (push_in / 10.0) * 0.51
         scale = base_overscan * (1.0 + zoom_progress * max_zoom_extra * phase_t)
 
-        noise_x = hh_noise_x + tx_pct * 0.4
+        # 3. Horizontal Wiggle (smooth left-right oscillation)
+        wiggle_scale = horizontal_wiggle * 0.4
+        wiggle_x = wiggle_scale * (
+            math.sin(time_sec * 3.5) * 0.6 +
+            math.sin(time_sec * 7.1 + 0.8) * 0.25 +
+            math.sin(time_sec * 1.3 + 2.0) * 0.15
+        )
+
+        noise_x = hh_noise_x + tx_pct * 0.4 + wiggle_x
         noise_y = hh_noise_y + ty_pct * 0.4
 
         trajectory.append({
@@ -405,11 +414,12 @@ def apply_post_parallax_camera_motion(
     time_sec: float,
     duration: float,
     zoom_out: float = 1.0,
+    zoom_in: float = 0.0,
     camera_shake: float = 0.0,
     handheld: float = 3.0,
 ) -> np.ndarray:
     """
-    Applies pure optical 2D camera zoom-out and multi-harmonic kinetic camera shake
+    Applies pure optical 2D camera zoom-in/out and multi-harmonic kinetic camera shake
     AFTER parallax displacement on the final output frame.
     Zero depth warping distortion or layer tearing.
     """
@@ -417,9 +427,15 @@ def apply_post_parallax_camera_motion(
     t = min(max(time_sec / max(duration, 0.01), 0.0), 1.0)
     eased_t = cubic_ease_out(t)
 
-    # 1. Optical Zoom Out calculation (starts at tight punched-in scale and eases out to full frame)
-    zoom_amp = (zoom_out / 10.0) * 0.20
-    zoom_scale = 1.04 + zoom_amp * (1.0 - eased_t)
+    # 1. Optical Zoom Out (starts punched-in, eases out to full frame)
+    zoom_out_amp = (zoom_out / 10.0) * 0.20
+    zoom_out_scale = zoom_out_amp * (1.0 - eased_t)
+
+    # 2. Optical Zoom In (starts at normal, eases into tighter frame)
+    zoom_in_amp = (zoom_in / 10.0) * 0.20
+    zoom_in_scale = zoom_in_amp * eased_t
+
+    zoom_scale = 1.04 + zoom_out_scale + zoom_in_scale
 
     # 2. Multi-Harmonic Kinetic Camera Shake & Roll on the final output
     shake_intensity = camera_shake / 10.0
@@ -467,6 +483,7 @@ def render_frames(
     aspect_ratio: str,
     resolution: str,
     zoom_out: float = 5.0,
+    zoom_in: float = 0.0,
     breathing: float = 10.0,
     watcher_sway: float = 10.0,
     blink: bool = False,
@@ -480,6 +497,7 @@ def render_frames(
     heartbeat_pulse: float = 2.5,
     motion_blur: float = 1.0,
     camera_shake: float = 0.0,
+    horizontal_wiggle: float = 0.0,
     progress_callback=None,
 ) -> list[np.ndarray]:
     """
@@ -512,6 +530,7 @@ def render_frames(
         handheld=handheld,
         fps=fps,
         camera_shake=camera_shake,
+        horizontal_wiggle=horizontal_wiggle,
     )
 
     frames = []
@@ -577,12 +596,13 @@ def render_frames(
         if film_grain > 0:
             frame = apply_film_grain(frame, i, film_grain)
 
-        # 10. Post-Parallax Pure Optical Camera Zoom-Out & Final Output Camera Shake
+        # 10. Post-Parallax Pure Optical Camera Zoom-In/Out & Final Output Camera Shake
         frame = apply_post_parallax_camera_motion(
             frame=frame,
             time_sec=cam["time_sec"],
             duration=duration,
             zoom_out=zoom_out,
+            zoom_in=zoom_in,
             camera_shake=camera_shake,
             handheld=handheld,
         )
@@ -696,6 +716,7 @@ def run_pipeline(
     v_drift: float = 0.0,
     handheld: float = 6.5,
     zoom_out: float = 5.0,
+    zoom_in: float = 0.0,
     depth_strength: float = 15.0,
     foreground_separation: float = 10.0,
     edge_fill: str = "inpaint",
@@ -714,6 +735,7 @@ def run_pipeline(
     heartbeat_pulse: float = 2.5,
     motion_blur: float = 1.0,
     camera_shake: float = 0.0,
+    horizontal_wiggle: float = 0.0,
     progress_callback=None,
 ) -> str:
     """
@@ -746,6 +768,7 @@ def run_pipeline(
         aspect_ratio=aspect_ratio,
         resolution=resolution,
         zoom_out=zoom_out,
+        zoom_in=zoom_in,
         breathing=breathing,
         watcher_sway=watcher_sway,
         blink=blink,
@@ -759,6 +782,7 @@ def run_pipeline(
         heartbeat_pulse=heartbeat_pulse,
         motion_blur=motion_blur,
         camera_shake=camera_shake,
+        horizontal_wiggle=horizontal_wiggle,
         progress_callback=frame_progress,
     )
 
