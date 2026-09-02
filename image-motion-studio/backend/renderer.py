@@ -428,11 +428,11 @@ def apply_post_parallax_camera_motion(
     eased_t = cubic_ease_out(t)
 
     # 1. Optical Zoom Out (starts punched-in, eases out to full frame)
-    zoom_out_amp = (zoom_out / 10.0) * 0.20
+    zoom_out_amp = (zoom_out / 10.0) * 0.80
     zoom_out_scale = zoom_out_amp * (1.0 - eased_t)
 
     # 2. Optical Zoom In (starts at normal, eases into tighter frame)
-    zoom_in_amp = (zoom_in / 10.0) * 0.20
+    zoom_in_amp = (zoom_in / 10.0) * 0.80
     zoom_in_scale = zoom_in_amp * eased_t
 
     zoom_scale = 1.04 + zoom_out_scale + zoom_in_scale

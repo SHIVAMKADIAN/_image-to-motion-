@@ -229,17 +229,34 @@
             <div class="field-grid-2">
               <div class="control-field">
                 <div class="field-header">
-                  <label for="param_zoom_in">Camera Zoom In</label>
+                  <label for="param_zoom_in">Zoom In</label>
                   <span class="field-value" id="val_zoom_in">0.0</span>
                 </div>
-                <input type="range" id="param_zoom_in" min="0" max="5.0" step="0.1" value="0.0">
+                <input type="range" id="param_zoom_in" min="0" max="10.0" step="0.1" value="0.0">
               </div>
               <div class="control-field">
                 <div class="field-header">
-                  <label for="param_zoom_out">Camera Zoom Out</label>
+                  <label for="param_zoom_out">Zoom Out</label>
                   <span class="field-value" id="val_zoom_out">0.0</span>
                 </div>
-                <input type="range" id="param_zoom_out" min="0" max="5.0" step="0.1" value="0.0">
+                <input type="range" id="param_zoom_out" min="0" max="10.0" step="0.1" value="0.0">
+              </div>
+            </div>
+
+            <div class="field-grid-2">
+              <div class="control-field">
+                <div class="field-header">
+                  <label for="param_horizontal_drift">Horizontal Drift</label>
+                  <span class="field-value" id="val_horizontal_drift">0.0</span>
+                </div>
+                <input type="range" id="param_horizontal_drift" min="-5.0" max="5.0" step="0.1" value="0.0">
+              </div>
+              <div class="control-field">
+                <div class="field-header">
+                  <label for="param_vertical_drift">Vertical Drift</label>
+                  <span class="field-value" id="val_vertical_drift">0.0</span>
+                </div>
+                <input type="range" id="param_vertical_drift" min="-5.0" max="5.0" step="0.1" value="0.0">
               </div>
             </div>
 

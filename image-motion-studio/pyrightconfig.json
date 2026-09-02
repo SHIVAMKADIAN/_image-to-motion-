@@ -1,6 +1,8 @@
 {
   "venvPath": "/Users/shivam/Downloads/untitled folder 4/image-motion-studio/backend",
   "venv": ".venv",
+  "pythonVersion": "3.12",
+  "pythonPlatform": "Darwin",
   "extraPaths": [
     ".",
     "backend"

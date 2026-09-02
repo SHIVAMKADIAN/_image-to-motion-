@@ -109,7 +109,7 @@
   /* ────────── Sliders & Inputs Binding ────────── */
   const paramKeys = [
     "duration", "fps", "resolution", "aspect_ratio", "edge_fill",
-    "zoom_in", "zoom_out", "horizontal_wiggle", "handheld", "camera_shake",
+    "push_in", "zoom_in", "zoom_out", "horizontal_drift", "vertical_drift", "horizontal_wiggle", "handheld", "camera_shake",
     "depth_strength", "foreground_separation",
     "breathing", "watcher_sway", "micro_saccades", "edge_flutter", "heartbeat_pulse", "blink",
     "dust_particles", "light_shift", "film_grain", "rack_focus", "specular_shimmer", "motion_blur"
@@ -135,6 +135,9 @@
     const mapKey = {
       aspectRatio: "aspect_ratio",
       edgeFill: "edge_fill",
+      pushIn: "push_in",
+      hDrift: "horizontal_drift",
+      vDrift: "vertical_drift",
       zoomIn: "zoom_in",
       zoomOut: "zoom_out",
       cameraShake: "camera_shake",
@@ -201,6 +204,7 @@
       }
     }
 
+    const t = anim.elapsed;
     const shakeInt = params.camera_shake !== undefined ? params.camera_shake : 0.0;
     const shakeSpeed = 0.15 + shakeInt * 2.05;
     const tShake = t * shakeSpeed;
@@ -214,19 +218,34 @@
     const ty = ny * 3.0 * shakeInt;
     const rot = nr * 0.25 * shakeInt;
 
-    // Post-parallax pure optical camera zoom-out progression (pulls back to full frame)
-    const zoomVal = params.zoom_out !== undefined ? params.zoom_out : 1.0;
+    const zoomVal = params.zoom_out !== undefined ? params.zoom_out : 0.0;
+    const zoomInVal = params.zoom_in !== undefined ? params.zoom_in : 0.0;
     const progressT = anim.elapsed / (params.duration || 2.0);
     const easedT = 1.0 - Math.pow(1.0 - Math.min(progressT, 1.0), 3);
-    const scale = 1.04 + (zoomVal / 10.0) * 0.20 * (1.0 - easedT);
+    
+    // Zoom Out starts punched in (1.04 + amp) and pulls back to normal (1.04)
+    const zoomOutScale = (zoomVal / 10.0) * 0.80 * (1.0 - easedT);
+    // Zoom In starts at normal (1.04) and pushes in to punch in (1.04 + amp)
+    const zoomInScale = (zoomInVal / 10.0) * 0.80 * easedT;
+    
+    const scale = 1.04 + zoomOutScale + zoomInScale;
 
-    frameEl.style.transform = `scale(${scale.toFixed(4)}) translate(${tx.toFixed(2)}%, ${ty.toFixed(2)}%) rotate(${rot.toFixed(2)}deg)`;
+    // 3D Drift offset translation
+    const hDriftVal = params.horizontal_drift !== undefined ? params.horizontal_drift : 0.0;
+    const vDriftVal = params.vertical_drift !== undefined ? params.vertical_drift : 0.0;
+    const dxDrift = hDriftVal * 2.0 * easedT;
+    const dyDrift = vDriftVal * 2.0 * easedT;
+
+    const totalTx = tx + dxDrift;
+    const totalTy = ty + dyDrift;
+
+    frameEl.style.transform = `scale(${scale.toFixed(4)}) translate(${totalTx.toFixed(2)}%, ${totalTy.toFixed(2)}%) rotate(${rot.toFixed(2)}deg)`;
 
     // Soft parallax background layer (0.35 motion factor)
     const PARALLAX_FACTOR = 0.35;
     const pxScale = scale * PARALLAX_FACTOR + (1 - PARALLAX_FACTOR);
-    const ptx = tx * PARALLAX_FACTOR;
-    const pty = ty * PARALLAX_FACTOR;
+    const ptx = totalTx * PARALLAX_FACTOR;
+    const pty = totalTy * PARALLAX_FACTOR;
     const prot = rot * PARALLAX_FACTOR;
     parallaxLayer.style.transform = `scale(${pxScale.toFixed(4)}) translate(${ptx.toFixed(2)}%, ${pty.toFixed(2)}%) rotate(${prot.toFixed(2)}deg)`;
 
@@ -374,9 +393,11 @@
       aspect_ratio: params.aspect_ratio,
       edge_fill: params.edge_fill,
       push_in: 0.0,
-      horizontal_drift: 0.0,
-      vertical_drift: 0.0,
-      zoom_out: params.zoom_out !== undefined ? params.zoom_out : 1.0,
+      horizontal_drift: params.horizontal_drift !== undefined ? params.horizontal_drift : 0.0,
+      vertical_drift: params.vertical_drift !== undefined ? params.vertical_drift : 0.0,
+      zoom_in: params.zoom_in !== undefined ? params.zoom_in : 0.0,
+      zoom_out: params.zoom_out !== undefined ? params.zoom_out : 0.0,
+      horizontal_wiggle: params.horizontal_wiggle !== undefined ? params.horizontal_wiggle : 0.0,
       handheld: params.handheld,
       camera_shake: params.camera_shake,
       depth_strength: params.depth_strength,
